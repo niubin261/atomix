@@ -19,46 +19,19 @@
 
   <dependencies>
     <dependency>
-      <groupId>io.atomix</groupId>
-      <artifactId>atomix-resource-manager</artifactId>
-      <version>${project.version}</version>
+      <groupId>io.atomix.copycat</groupId>
+      <artifactId>copycat-client</artifactId>
+      <version>${copycat.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.atomix.copycat</groupId>
+      <artifactId>copycat-server</artifactId>
+      <version>${copycat.version}</version>
     </dependency>
     <dependency>
       <groupId>io.atomix.catalyst</groupId>
       <artifactId>catalyst-local</artifactId>
       <version>${catalyst.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.atomix</groupId>
-      <artifactId>atomix-groups</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.atomix</groupId>
-      <artifactId>atomix-variables</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.atomix</groupId>
-      <artifactId>atomix-collections</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.atomix</groupId>
-      <artifactId>atomix-concurrent</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.atomix</groupId>
-      <artifactId>atomix-testing</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.atomix.catalyst</groupId>
-      <artifactId>catalyst-netty</artifactId>
-      <version>${catalyst.version}</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 

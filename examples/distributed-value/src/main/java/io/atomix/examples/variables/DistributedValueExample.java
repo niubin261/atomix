@@ -20,7 +20,7 @@ import io.atomix.catalyst.transport.Address;
 import io.atomix.catalyst.transport.netty.NettyTransport;
 import io.atomix.copycat.server.storage.Storage;
 import io.atomix.copycat.server.storage.StorageLevel;
-import io.atomix.variables.DistributedValue;
+import io.atomix.atomics.DistributedValue;
 
 import java.time.Duration;
 import java.util.ArrayList;

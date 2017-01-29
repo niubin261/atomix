@@ -15,7 +15,7 @@
  */
 package io.atomix;
 
-import io.atomix.variables.DistributedLong;
+import io.atomix.atomics.DistributedLong;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 

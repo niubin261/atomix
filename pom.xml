@@ -62,17 +62,8 @@
   </issueManagement>
 
   <modules>
-    <module>resource</module>
-    <module>manager</module>
-    <module>groups</module>
-    <module>collections</module>
-    <module>concurrent</module>
-    <module>variables</module>
     <module>core</module>
-    <module>standalone</module>
     <module>examples</module>
-    <module>testing</module>
-    <module>all</module>
   </modules>
 
   <dependencies>

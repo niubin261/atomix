@@ -15,6 +15,8 @@
  */
 package io.atomix;
 
+import io.atomix.atomics.DistributedLong;
+import io.atomix.atomics.DistributedValue;
 import io.atomix.catalyst.concurrent.ThreadContext;
 import io.atomix.catalyst.serializer.Serializer;
 import io.atomix.catalyst.util.Assert;
@@ -28,8 +30,6 @@ import io.atomix.manager.ResourceClient;
 import io.atomix.manager.ResourceManager;
 import io.atomix.resource.Resource;
 import io.atomix.resource.ResourceType;
-import io.atomix.variables.DistributedLong;
-import io.atomix.variables.DistributedValue;
 
 import java.util.Arrays;
 import java.util.Collection;
