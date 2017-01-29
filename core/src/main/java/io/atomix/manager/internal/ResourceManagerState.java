@@ -24,10 +24,10 @@ import io.atomix.copycat.server.session.SessionListener;
 import io.atomix.copycat.server.storage.snapshot.SnapshotReader;
 import io.atomix.copycat.server.storage.snapshot.SnapshotWriter;
 import io.atomix.manager.ResourceManagerException;
-import io.atomix.manager.resource.internal.InstanceOperation;
 import io.atomix.resource.Resource;
 import io.atomix.resource.ResourceStateMachine;
 import io.atomix.resource.ResourceType;
+import io.atomix.resource.instance.InstanceOperation;
 
 import java.util.*;
 import java.util.function.Function;
