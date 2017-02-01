@@ -15,8 +15,6 @@
  */
 package io.atomix.manager;
 
-import io.atomix.catalyst.serializer.Serializer;
-import io.atomix.catalyst.concurrent.ThreadContext;
 import io.atomix.resource.Resource;
 import io.atomix.resource.ResourceType;
 
@@ -30,29 +28,6 @@ import java.util.concurrent.CompletableFuture;
  * @author <a href="http://github.com/kuujo">Jordan Halterman</a>
  */
 public interface ResourceManager<T extends ResourceManager<T>> {
-
-  /**
-   * Returns the Atomix thread context.
-   * <p>
-   * This context is representative of the thread on which asynchronous callbacks will be executed for this
-   * Atomix instance. Atomix guarantees that all {@link CompletableFuture}s supplied by this instance will
-   * be executed via the returned context. Users can use the context to access the thread-local
-   * {@link Serializer}.
-   *
-   * @return The Atomix thread context.
-   */
-  ThreadContext context();
-
-  /**
-   * Returns the resource manager serializer.
-   * <p>
-   * The serializer applies to all resources controlled by this instance. Serializable types registered
-   * on the serializer will be reflected at the {@link io.atomix.catalyst.transport.Transport} layer.
-   * Types registered on the client must also be registered on the server for deserialization.
-   *
-   * @return The resource manager serializer.
-   */
-  Serializer serializer();
 
   /**
    * Returns the resource type for the given resource class.

@@ -20,6 +20,8 @@ import io.atomix.copycat.Query;
 import io.atomix.copycat.client.CopycatClient;
 import io.atomix.copycat.server.Commit;
 import io.atomix.resource.*;
+import io.atomix.resource.annotations.Command;
+import io.atomix.resource.annotations.Query;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

@@ -15,13 +15,10 @@
  */
 package io.atomix.resource;
 
-import io.atomix.catalyst.concurrent.Listener;
-import io.atomix.catalyst.concurrent.ThreadContext;
-import io.atomix.catalyst.serializer.Serializer;
-import io.atomix.catalyst.util.Managed;
-import io.atomix.copycat.Command;
-import io.atomix.copycat.Query;
 import io.atomix.copycat.session.Session;
+import io.atomix.copycat.util.Managed;
+import io.atomix.resource.annotations.Command;
+import io.atomix.resource.annotations.Query;
 
 import java.io.Serializable;
 import java.util.Properties;
@@ -82,43 +79,6 @@ public interface Resource<T extends Resource<T>> extends Managed<T> {
     public Options(Properties defaults) {
       super(defaults);
     }
-  }
-
-  /**
-   * Resource event type.
-   * <p>
-   * An event type should be created for each distinct {@link Event} supported by a resource type.
-   * The event type provides an {@link #id()} that is used internally by Atomix to invoke event
-   * handlers within the resource client.
-   */
-  interface EventType {
-    /**
-     * Returns the event type ID.
-     * <p>
-     * The event type ID is used to identify event types when published from the server state
-     * machine to the client. Event type IDs must be unique within a resource type.
-     *
-     * @return The event type ID. This must be unique within a resource type.
-     */
-    int id();
-  }
-
-  /**
-   * Resource event interface.
-   * <p>
-   * Resources should implement this interface for event messages sent from {@link ResourceStateMachine}s
-   * to resource clients. Each event type should be associated with a unique {@link EventType} that indicates
-   * the event identifier.
-   */
-  interface Event {
-    /**
-     * Returns the resource event type.
-     * <p>
-     * The event type should be unique to the specific event as it's used as an event identifier.
-     *
-     * @return The resource event type.
-     */
-    EventType type();
   }
 
   /**
@@ -199,13 +159,6 @@ public interface Resource<T extends Resource<T>> extends Managed<T> {
   ResourceType type();
 
   /**
-   * Returns the resource serializer.
-   *
-   * @return The resource serializer.
-   */
-  Serializer serializer();
-
-  /**
    * Returns the resource configuration.
    *
    * @return The resource configuration.
@@ -237,7 +190,7 @@ public interface Resource<T extends Resource<T>> extends Managed<T> {
    * @param callback The callback to call when the resource state changes.
    * @return The state change listener.
    */
-  Listener<State> onStateChange(Consumer<State> callback);
+  EventListener<State> onStateChange(Consumer<State> callback);
 
   /**
    * Registers a listener which gets called after the resource recovery process
@@ -245,14 +198,7 @@ public interface Resource<T extends Resource<T>> extends Managed<T> {
    * @param callback The callback to call when the resource finishes recovery process.
    * @return The recovery listener.
    */
-  Listener<Integer> onRecovery(Consumer<Integer> callback);
-
-  /**
-   * Returns the resource thread context.
-   *
-   * @return The resource thread context.
-   */
-  ThreadContext context();
+  EventListener<Integer> onRecovery(Consumer<Integer> callback);
 
   /**
    * Opens the resource.

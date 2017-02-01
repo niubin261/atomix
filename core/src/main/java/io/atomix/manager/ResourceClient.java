@@ -15,33 +15,25 @@
  */
 package io.atomix.manager;
 
-import io.atomix.catalyst.serializer.Serializer;
-import io.atomix.catalyst.transport.Address;
-import io.atomix.catalyst.transport.Transport;
-import io.atomix.catalyst.util.Assert;
-import io.atomix.catalyst.util.ConfigurationException;
-import io.atomix.catalyst.concurrent.Futures;
-import io.atomix.catalyst.concurrent.ThreadContext;
-import io.atomix.copycat.client.ConnectionStrategies;
-import io.atomix.copycat.client.ConnectionStrategy;
-import io.atomix.copycat.client.CopycatClient;
-import io.atomix.copycat.client.RecoveryStrategies;
-import io.atomix.copycat.client.ServerSelectionStrategies;
+import io.atomix.AtomixException;
+import io.atomix.copycat.client.*;
+import io.atomix.copycat.protocol.Address;
+import io.atomix.copycat.protocol.Protocol;
+import io.atomix.copycat.util.Assert;
+import io.atomix.copycat.util.concurrent.Futures;
 import io.atomix.manager.internal.GetResourceKeys;
 import io.atomix.manager.internal.ResourceExists;
-import io.atomix.manager.options.ClientOptions;
-import io.atomix.resource.instance.InstanceClient;
-import io.atomix.resource.instance.ResourceInstance;
-import io.atomix.manager.util.ResourceManagerTypeResolver;
 import io.atomix.resource.Resource;
 import io.atomix.resource.ResourceRegistry;
 import io.atomix.resource.ResourceType;
+import io.atomix.resource.instance.InstanceClient;
+import io.atomix.resource.instance.ResourceInstance;
+import io.atomix.util.Bson;
 
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Provides an interface for creating and operating on {@link io.atomix.resource.Resource}s remotely.
@@ -56,7 +48,7 @@ import java.util.stream.Collectors;
  *     new Address("123.456.789.1", 5000)
  *   );
  *   ResourceManager manager = ResourceClient.builder(servers)
- *     .withTransport(new NettyTransport())
+ *     .withProtocol(new NettyTransport())
  *     .build();
  *   }
  * </pre>
@@ -64,8 +56,8 @@ import java.util.stream.Collectors;
  * server in order for the client to connect. Once the client connects to the cluster and opens a session, the client
  * will receive an updated list of servers to which to connect.
  * <p>
- * Clients communicate with the cluster via a {@link Transport}. By default, the {@code NettyTransport} is used if
- * no transport is explicitly configured. Thus, if no transport is configured then the Netty transport is expected
+ * Clients communicate with the cluster via a {@link Protocol}. By default, the {@code NettyTransport} is used if
+ * no protocol is explicitly configured. Thus, if no protocol is configured then the Netty protocol is expected
  * to be available on the classpath.
  * <p>
  * <b>Client lifecycle</b>
@@ -105,19 +97,6 @@ public class ResourceClient implements ResourceManager<ResourceClient> {
     return new Builder();
   }
 
-  /**
-   * Returns a new ResourceClient builder from the given properties.
-   *
-   * @param properties The properties from which to load the replica builder.
-   * @return The replica builder.
-   */
-  public static Builder builder(Properties properties) {
-    ClientOptions clientProperties = new ClientOptions(properties);
-    return new Builder()
-      .withTransport(clientProperties.transport())
-      .withSerializer(clientProperties.serializer());
-  }
-
   private final CopycatClient client;
   private final Map<Class<? extends Resource<?>>, ResourceType> types = new ConcurrentHashMap<>();
   private final Map<String, Resource<?>> instances = new HashMap<>();
@@ -140,23 +119,14 @@ public class ResourceClient implements ResourceManager<ResourceClient> {
   }
 
   @Override
-  public ThreadContext context() {
-    return client.context();
-  }
-
-  @Override
-  public Serializer serializer() {
-    return client.serializer();
-  }
-
-  @Override
   public final ResourceType type(Class<? extends Resource<?>> type) {
     return types.computeIfAbsent(type, ResourceType::new);
   }
 
   @Override
   public CompletableFuture<Boolean> exists(String key) {
-    return client.submit(new ResourceExists(key));
+    return client.submitQuery(Bson.serializer.writeValue(new ResourceExists(key)))
+      .thenApply(v -> Bson.serializer.readValue(v, Boolean.class));
   }
 
   @Override
@@ -323,15 +293,15 @@ public class ResourceClient implements ResourceManager<ResourceClient> {
    * <pre>
    *   {@code
    *   ResourceClient client = ResourceClient.builder(servers)
-   *     .withTransport(new NettyTransport())
+   *     .withProtocol(new NettyTransport())
    *     .build();
    *   }
    * </pre>
    */
-  public static class Builder implements io.atomix.catalyst.util.Builder<ResourceClient> {
+  public static class Builder implements io.atomix.copycat.util.Builder<ResourceClient> {
     private final ResourceRegistry registry = new ResourceRegistry();
     private CopycatClient.Builder clientBuilder;
-    private Transport transport;
+    private Protocol protocol;
 
     protected Builder() {
       clientBuilder = CopycatClient.builder()
@@ -341,19 +311,19 @@ public class ResourceClient implements ResourceManager<ResourceClient> {
     }
 
     /**
-     * Sets the Atomix transport.
+     * Sets the Atomix protocol.
      * <p>
-     * The configured transport should be the same transport as all other nodes in the cluster.
-     * If no transport is explicitly provided, the instance will default to the {@code NettyTransport}
+     * The configured protocol should be the same protocol as all other nodes in the cluster.
+     * If no protocol is explicitly provided, the instance will default to the {@code NettyTransport}
      * if available on the classpath.
      *
-     * @param transport The Atomix transport.
+     * @param protocol The Atomix protocol.
      * @return The Atomix builder.
-     * @throws NullPointerException if {@code transport} is {@code null}
+     * @throws NullPointerException if {@code protocol} is {@code null}
      */
-    public Builder withTransport(Transport transport) {
-      clientBuilder.withTransport(transport);
-      this.transport = transport;
+    public Builder withProtocol(Protocol protocol) {
+      clientBuilder.withProtocol(protocol);
+      this.protocol = protocol;
       return this;
     }
 
@@ -370,19 +340,6 @@ public class ResourceClient implements ResourceManager<ResourceClient> {
     }
 
     /**
-     * Sets the Atomix serializer.
-     * <p>
-     * The serializer will be used to serialize and deserialize operations that are sent over the wire.
-     *
-     * @param serializer The Atomix serializer.
-     * @return The Atomix builder.
-     */
-    public Builder withSerializer(Serializer serializer) {
-      clientBuilder.withSerializer(serializer);
-      return this;
-    }
-
-    /**
      * Sets the client session timeout.
      *
      * @param sessionTimeout The client session timeout.
@@ -393,80 +350,16 @@ public class ResourceClient implements ResourceManager<ResourceClient> {
       return this;
     }
 
-    /**
-     * Sets the available resource types.
-     *
-     * @param types The available resource types.
-     * @return The client builder.
-     */
-    public Builder withResourceTypes(Class<? extends Resource<?>>... types) {
-      return withResourceTypes(Arrays.asList(types).stream().map(ResourceType::new).collect(Collectors.toList()));
-    }
-
-    /**
-     * Sets the available resource types.
-     *
-     * @param types The available resource types.
-     * @return The client builder.
-     */
-    public Builder withResourceTypes(ResourceType... types) {
-      return withResourceTypes(Arrays.asList(types));
-    }
-
-    /**
-     * Sets the available resource types.
-     *
-     * @param types The available resource types.
-     * @return The client builder.
-     */
-    public Builder withResourceTypes(Collection<ResourceType> types) {
-      types.forEach(registry::register);
-      return this;
-    }
-
-    /**
-     * Adds a resource type to the server.
-     *
-     * @param type The resource type.
-     * @return The server builder.
-     */
-    public Builder addResourceType(Class<? extends Resource<?>> type) {
-      return addResourceType(new ResourceType(type));
-    }
-
-    /**
-     * Adds a resource type to the server.
-     *
-     * @param type The resource type.
-     * @return The server builder.
-     */
-    public Builder addResourceType(ResourceType type) {
-      registry.register(type);
-      return this;
-    }
-
     @Override
     public ResourceClient build() {
-      if (transport == null) {
+      if (protocol == null) {
         try {
-          transport = (Transport) Class.forName("io.atomix.catalyst.transport.netty.NettyTransport").newInstance();
+          protocol = (Protocol) Class.forName("io.atomix.catalyst.transport.netty.NettyTransport").newInstance();
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-          throw new ConfigurationException("transport not configured");
+          throw new AtomixException("transport not configured");
         }
       }
-
-      CopycatClient client = clientBuilder.build();
-      client.serializer().resolve(new ResourceManagerTypeResolver());
-
-      for (ResourceType type : registry.types()) {
-        try {
-          type.factory().newInstance().createSerializableTypeResolver().resolve(client.serializer().registry());
-        } catch (InstantiationException | IllegalAccessException e) {
-          throw new ResourceManagerException(e);
-        }
-      }
-
-      return new ResourceClient(client);
+      return new ResourceClient(clientBuilder.build());
     }
   }
 

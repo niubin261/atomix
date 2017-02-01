@@ -15,19 +15,13 @@
  */
 package io.atomix.collections;
 
-import io.atomix.catalyst.buffer.BufferInput;
-import io.atomix.catalyst.buffer.BufferOutput;
 import io.atomix.catalyst.concurrent.Listener;
 import io.atomix.catalyst.serializer.CatalystSerializable;
 import io.atomix.catalyst.serializer.Serializer;
 import io.atomix.collections.internal.MapCommands;
-import io.atomix.collections.internal.MapEntry;
 import io.atomix.collections.util.DistributedMapFactory;
 import io.atomix.copycat.client.CopycatClient;
-import io.atomix.resource.AbstractResource;
-import io.atomix.resource.ReadConsistency;
-import io.atomix.resource.Resource;
-import io.atomix.resource.ResourceTypeInfo;
+import io.atomix.resource.*;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -1475,7 +1469,7 @@ public class DistributedMap<K, V> extends AbstractResource<DistributedMap<K, V>>
    * @param <K> The entry key type.
    * @param <V> The entry value type.
    */
-  public static class EntryEvent<K, V> implements Event, CatalystSerializable {
+  public static class EntryEvent<K, V> implements Event {
     private EventType type;
     private Map.Entry<K, V> entry;
 
@@ -1499,21 +1493,6 @@ public class DistributedMap<K, V> extends AbstractResource<DistributedMap<K, V>>
      */
     public Map.Entry<K, V> entry() {
       return entry;
-    }
-
-    @Override
-    public void writeObject(BufferOutput<?> buffer, Serializer serializer) {
-      buffer.writeByte(type.id());
-      serializer.writeObject(entry.getKey(), buffer);
-      serializer.writeObject(entry.getValue(), buffer);
-    }
-
-    @Override
-    public void readObject(BufferInput<?> buffer, Serializer serializer) {
-      type = Events.values()[buffer.readByte()];
-      K key = serializer.readObject(buffer);
-      V value = serializer.readObject(buffer);
-      entry = new MapEntry<>(key, value);
     }
   }
 

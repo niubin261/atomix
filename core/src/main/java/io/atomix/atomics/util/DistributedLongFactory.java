@@ -21,7 +21,7 @@ import io.atomix.resource.ResourceFactory;
 import io.atomix.resource.ResourceStateMachine;
 import io.atomix.atomics.DistributedLong;
 import io.atomix.atomics.internal.LongCommands;
-import io.atomix.atomics.internal.LongState;
+import io.atomix.atomics.internal.LongService;
 
 import java.util.Properties;
 
@@ -39,7 +39,7 @@ public class DistributedLongFactory implements ResourceFactory<DistributedLong> 
 
   @Override
   public ResourceStateMachine createStateMachine(Properties config) {
-    return new LongState(config);
+    return new LongService(config);
   }
 
   @Override

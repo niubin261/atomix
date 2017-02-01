@@ -21,7 +21,7 @@ import io.atomix.resource.ResourceFactory;
 import io.atomix.resource.ResourceStateMachine;
 import io.atomix.atomics.DistributedValue;
 import io.atomix.atomics.internal.ValueCommands;
-import io.atomix.atomics.internal.ValueState;
+import io.atomix.atomics.internal.ValueService;
 
 import java.util.Properties;
 
@@ -39,7 +39,7 @@ public class DistributedValueFactory implements ResourceFactory<DistributedValue
 
   @Override
   public ResourceStateMachine createStateMachine(Properties config) {
-    return new ValueState<>(config);
+    return new ValueService<>(config);
   }
 
   @Override

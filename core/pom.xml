@@ -29,9 +29,24 @@
       <version>${copycat.version}</version>
     </dependency>
     <dependency>
-      <groupId>io.atomix.catalyst</groupId>
-      <artifactId>catalyst-local</artifactId>
-      <version>${catalyst.version}</version>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web</artifactId>
+      <version>${vertx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.undercouch</groupId>
+      <artifactId>bson4jackson</artifactId>
+      <version>${jackson.bson.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.ws.rs</groupId>
+      <artifactId>javax.ws.rs-api</artifactId>
+      <version>${javax.ws.rs.version}</version>
     </dependency>
   </dependencies>
 

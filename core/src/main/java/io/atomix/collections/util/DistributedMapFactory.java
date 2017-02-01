@@ -18,7 +18,7 @@ package io.atomix.collections.util;
 import io.atomix.catalyst.serializer.SerializableTypeResolver;
 import io.atomix.collections.DistributedMap;
 import io.atomix.collections.internal.MapCommands;
-import io.atomix.collections.internal.MapState;
+import io.atomix.collections.internal.MapService;
 import io.atomix.copycat.client.CopycatClient;
 import io.atomix.resource.ResourceFactory;
 import io.atomix.resource.ResourceStateMachine;
@@ -39,7 +39,7 @@ public class DistributedMapFactory implements ResourceFactory<DistributedMap<?, 
 
   @Override
   public ResourceStateMachine createStateMachine(Properties config) {
-    return new MapState(config);
+    return new MapService(config);
   }
 
   @Override

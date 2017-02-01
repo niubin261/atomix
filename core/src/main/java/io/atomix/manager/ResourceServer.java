@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  *   {@code
  *   List<Address> members = Arrays.asList(new Address("123.456.789.0", 5000), new Address("123.456.789.1", 5000));
  *   AtomixServer server = AtomixServer.builder(address, members)
- *     .withTransport(new NettyTransport())
+ *     .withProtocol(new NettyTransport())
  *     .withStorage(new Storage(StorageLevel.MEMORY))
  *     .build();
  *   }
@@ -383,7 +383,7 @@ public final class ResourceServer {
    * <pre>
    *   {@code
    *   AtomixServer server = AtomixServer.builder(address, servers)
-   *     .withTransport(new NettyTransport())
+   *     .withProtocol(new NettyTransport())
    *     .withStorage(Storage.builder()
    *       .withDirectory("logs")
    *       .withStorageLevel(StorageLevel.MAPPED)

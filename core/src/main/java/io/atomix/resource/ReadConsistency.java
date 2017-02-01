@@ -16,6 +16,7 @@
 package io.atomix.resource;
 
 import io.atomix.copycat.Query;
+import io.atomix.resource.annotations.Query;
 
 /**
  * Constants for controlling read consistency constraints on a per-request basis.

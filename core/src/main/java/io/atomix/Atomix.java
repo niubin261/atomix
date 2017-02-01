@@ -17,22 +17,18 @@ package io.atomix;
 
 import io.atomix.atomics.DistributedLong;
 import io.atomix.atomics.DistributedValue;
-import io.atomix.catalyst.concurrent.ThreadContext;
-import io.atomix.catalyst.serializer.Serializer;
-import io.atomix.catalyst.util.Assert;
 import io.atomix.collections.DistributedMap;
 import io.atomix.collections.DistributedMultiMap;
 import io.atomix.collections.DistributedQueue;
 import io.atomix.collections.DistributedSet;
 import io.atomix.concurrent.DistributedLock;
+import io.atomix.copycat.util.Assert;
 import io.atomix.group.DistributedGroup;
 import io.atomix.manager.ResourceClient;
 import io.atomix.manager.ResourceManager;
 import io.atomix.resource.Resource;
 import io.atomix.resource.ResourceType;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -51,38 +47,10 @@ import java.util.concurrent.CompletableFuture;
  * @author <a href="http://github.com/kuujo">Jordan Halterman</a>
  */
 public abstract class Atomix implements ResourceManager<Atomix> {
-  static final Collection<ResourceType> RESOURCES = Arrays.asList(
-    new ResourceType(DistributedMap.class),
-    new ResourceType(DistributedMultiMap.class),
-    new ResourceType(DistributedSet.class),
-    new ResourceType(DistributedQueue.class),
-    new ResourceType(DistributedValue.class),
-    new ResourceType(DistributedLong.class),
-    new ResourceType(DistributedLock.class),
-    new ResourceType(DistributedGroup.class)
-  );
-
   final ResourceClient client;
 
   protected Atomix(ResourceClient client) {
     this.client = Assert.notNull(client, "client");
-  }
-
-  @Override
-  public ThreadContext context() {
-    return client.context();
-  }
-
-  /**
-   * Returns the Atomix serializer.
-   * <p>
-   * Serializable types registered on the returned serializer are reflected throughout the system. Types
-   * registered on a client must also be registered on all replicas to be transported across the wire.
-   *
-   * @return The Atomix serializer.
-   */
-  public Serializer serializer() {
-    return client.client().serializer();
   }
 
   /**

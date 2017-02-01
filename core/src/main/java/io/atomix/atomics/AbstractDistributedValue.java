@@ -15,15 +15,9 @@
  */
 package io.atomix.atomics;
 
-import io.atomix.catalyst.buffer.BufferInput;
-import io.atomix.catalyst.buffer.BufferOutput;
-import io.atomix.catalyst.concurrent.Listener;
-import io.atomix.catalyst.serializer.CatalystSerializable;
-import io.atomix.catalyst.serializer.Serializer;
-import io.atomix.copycat.client.CopycatClient;
-import io.atomix.resource.AbstractResource;
-import io.atomix.resource.ReadConsistency;
 import io.atomix.atomics.internal.ValueCommands;
+import io.atomix.copycat.client.CopycatClient;
+import io.atomix.resource.*;
 
 import java.time.Duration;
 import java.util.Properties;
@@ -54,7 +48,7 @@ public abstract class AbstractDistributedValue<T extends AbstractDistributedValu
    * @param callback The callback to be called when the value changes.
    * @return The change event.
    */
-  public synchronized CompletableFuture<Listener<ChangeEvent<T>>> onChange(Consumer<ChangeEvent<T>> callback) {
+  public synchronized CompletableFuture<EventListener<ChangeEvent<T>>> onChange(Consumer<ChangeEvent<T>> callback) {
     return onEvent(Events.CHANGE, callback);
   }
 
@@ -228,7 +222,7 @@ public abstract class AbstractDistributedValue<T extends AbstractDistributedValu
   /**
    * Distributed value change event.
    */
-  public static class ChangeEvent<T> implements Event, CatalystSerializable {
+  public static class ChangeEvent<T> implements Event {
     private T oldValue;
     private T newValue;
 
@@ -261,18 +255,6 @@ public abstract class AbstractDistributedValue<T extends AbstractDistributedValu
      */
     public T newValue() {
       return newValue;
-    }
-
-    @Override
-    public void writeObject(BufferOutput<?> buffer, Serializer serializer) {
-      serializer.writeObject(oldValue, buffer);
-      serializer.writeObject(newValue, buffer);
-    }
-
-    @Override
-    public void readObject(BufferInput<?> buffer, Serializer serializer) {
-      oldValue = serializer.readObject(buffer);
-      newValue = serializer.readObject(buffer);
     }
 
     @Override

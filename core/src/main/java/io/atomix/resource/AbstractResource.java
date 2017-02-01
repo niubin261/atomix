@@ -15,11 +15,8 @@
  */
 package io.atomix.resource;
 
-import io.atomix.catalyst.concurrent.Listener;
-import io.atomix.catalyst.concurrent.ThreadContext;
-import io.atomix.catalyst.serializer.Serializer;
-import io.atomix.catalyst.util.Assert;
 import io.atomix.copycat.client.CopycatClient;
+import io.atomix.copycat.util.Assert;
 import io.atomix.resource.internal.ResourceCommand;
 import io.atomix.resource.internal.ResourceCopycatClient;
 import io.atomix.resource.internal.ResourceEvent;
@@ -85,7 +82,7 @@ public abstract class AbstractResource<T extends Resource<T>> implements Resourc
    * @param <T> The event type.
    * @return A completable future to be completed once the event listener has been registered.
    */
-  protected synchronized <T extends Event> CompletableFuture<Listener<T>> onEvent(EventType type, Consumer<T> callback) {
+  protected synchronized <T extends Event> CompletableFuture<EventListener<T>> onEvent(EventType type, Consumer<T> callback) {
     Set<Consumer> listeners = eventListeners.computeIfAbsent(type.id(), id -> new CopyOnWriteArraySet<>());
     listeners.add(callback);
     return client.submit(new ResourceCommand.Register(type.id())).whenComplete((result, error) -> {
@@ -98,7 +95,7 @@ public abstract class AbstractResource<T extends Resource<T>> implements Resourc
           }
         }
       }
-    }).<Listener<T>>thenApply(v -> new Listener<T>() {
+    }).<EventListener<T>>thenApply(v -> new EventListener<T>() {
       @Override
       public void accept(T event) {
         callback.accept(event);
@@ -152,11 +149,6 @@ public abstract class AbstractResource<T extends Resource<T>> implements Resourc
   }
 
   @Override
-  public Serializer serializer() {
-    return client.serializer();
-  }
-
-  @Override
   public Config config() {
     return config;
   }
@@ -172,18 +164,13 @@ public abstract class AbstractResource<T extends Resource<T>> implements Resourc
   }
 
   @Override
-  public Listener<State> onStateChange(Consumer<State> callback) {
+  public EventListener<State> onStateChange(Consumer<State> callback) {
     return new StateChangeListener(Assert.notNull(callback, "callback"));
   }
 
   @Override
-  public Listener<Integer> onRecovery(Consumer<Integer> callback) {
+  public EventListener<Integer> onRecovery(Consumer<Integer> callback) {
     return new RecoveryListener(Assert.notNull(callback, "callback"));
-  }
-
-  @Override
-  public ThreadContext context() {
-    return client.context();
   }
 
   @Override
@@ -240,7 +227,7 @@ public abstract class AbstractResource<T extends Resource<T>> implements Resourc
   /**
    * Resource state change listener.
    */
-  private class StateChangeListener implements Listener<State> {
+  private class StateChangeListener implements EventListener<State> {
     private final Consumer<State> callback;
 
     private StateChangeListener(Consumer<State> callback) {
@@ -262,7 +249,7 @@ public abstract class AbstractResource<T extends Resource<T>> implements Resourc
   /**
    * Resource state change listener.
    */
-  private class RecoveryListener implements Listener<Integer> {
+  private class RecoveryListener implements EventListener<Integer> {
     private final Consumer<Integer> callback;
 
     private RecoveryListener(Consumer<Integer> callback) {

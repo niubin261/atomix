@@ -15,15 +15,7 @@
  */
 package io.atomix.atomics.internal;
 
-import io.atomix.catalyst.buffer.BufferInput;
-import io.atomix.catalyst.buffer.BufferOutput;
-import io.atomix.catalyst.serializer.CatalystSerializable;
-import io.atomix.catalyst.serializer.SerializableTypeResolver;
-import io.atomix.catalyst.serializer.Serializer;
-import io.atomix.catalyst.serializer.SerializerRegistry;
-import io.atomix.copycat.Command;
-import io.atomix.copycat.Query;
-import io.atomix.atomics.DistributedValue;
+import io.atomix.resource.Operation;
 
 /**
  * Distributed value commands.
@@ -40,7 +32,7 @@ public class ValueCommands {
   /**
    * Abstract value command.
    */
-  public static abstract class ValueCommand<V> implements Command<V>, CatalystSerializable {
+  public static abstract class ValueCommand implements Operation {
     protected long ttl;
 
     protected ValueCommand() {
@@ -48,11 +40,6 @@ public class ValueCommands {
 
     protected ValueCommand(long ttl) {
       this.ttl = ttl;
-    }
-
-    @Override
-    public CompactionMode compaction() {
-      return ttl > 0 ? CompactionMode.EXPIRING : CompactionMode.QUORUM;
     }
 
     /**
@@ -63,96 +50,58 @@ public class ValueCommands {
     public long ttl() {
       return ttl;
     }
-
-    @Override
-    public void writeObject(BufferOutput<?> buffer, Serializer serializer) {
-      buffer.writeLong(ttl);
-    }
-
-    @Override
-    public void readObject(BufferInput<?> buffer, Serializer serializer) {
-      ttl = buffer.readLong();
-    }
   }
 
   /**
    * Abstract value query.
    */
-  public static abstract class ValueQuery<V> implements Query<V>, CatalystSerializable {
-    private ConsistencyLevel consistency;
-
+  public static abstract class ValueQuery implements Operation {
     protected ValueQuery() {
-    }
-
-    protected ValueQuery(ConsistencyLevel consistency) {
-      this.consistency = consistency;
-    }
-
-    @Override
-    public void writeObject(BufferOutput<?> output, Serializer serializer) {
-      if (consistency != null) {
-        output.writeByte(consistency.ordinal());
-      } else {
-        output.writeByte(-1);
-      }
-    }
-
-    @Override
-    public void readObject(BufferInput<?> input, Serializer serializer) {
-      int ordinal = input.readByte();
-      if (ordinal != -1) {
-        consistency = ConsistencyLevel.values()[ordinal];
-      }
     }
   }
 
   /**
    * Get query.
    */
-  public static class Get<T> extends ValueQuery<T> {
+  public static class Get extends ValueQuery {
     public Get() {
     }
 
-    public Get(ConsistencyLevel consistency) {
-      super(consistency);
+    @Override
+    public String getName() {
+      return "get";
     }
   }
 
   /**
    * Set command.
    */
-  public static class Set<T> extends ValueCommand<T> {
-    private T value;
+  public static class Set extends ValueCommand {
+    private byte[] value;
 
     public Set() {
     }
 
-    public Set(T value) {
+    public Set(byte[] value) {
       this.value = value;
     }
 
-    public Set(T value, long ttl) {
+    public Set(byte[] value, long ttl) {
       super(ttl);
       this.value = value;
     }
 
-    /**
-     * Returns the command value.
-     *
-     * @return The command value.
-     */
-    public T value() {
+    @Override
+    public String getName() {
+      return "set";
+    }
+
+    public byte[] getValue() {
       return value;
     }
 
-    @Override
-    public void writeObject(BufferOutput<?> buffer, Serializer serializer) {
-      serializer.writeObject(value, buffer);
-    }
-
-    @Override
-    public void readObject(BufferInput<?> buffer, Serializer serializer) {
-      value = serializer.readObject(buffer);
+    public void setValue(byte[] value) {
+      this.value = value;
     }
 
     @Override
@@ -164,52 +113,43 @@ public class ValueCommands {
   /**
    * Compare and set command.
    */
-  public static class CompareAndSet<T> extends ValueCommand<Boolean> {
-    private T expect;
-    private T update;
+  public static class CompareAndSet extends ValueCommand {
+    private byte[] expect;
+    private byte[] update;
 
     public CompareAndSet() {
     }
 
-    public CompareAndSet(T expect, T update) {
+    public CompareAndSet(byte[] expect, byte[] update) {
       this.expect = expect;
       this.update = update;
     }
 
-    public CompareAndSet(T expect, T update, long ttl) {
+    public CompareAndSet(byte[] expect, byte[] update, long ttl) {
       super(ttl);
       this.expect = expect;
       this.update = update;
     }
 
-    /**
-     * Returns the expected value.
-     *
-     * @return The expected value.
-     */
-    public T expect() {
+    @Override
+    public String getName() {
+      return "compareAndSet";
+    }
+
+    public byte[] getExpect() {
       return expect;
     }
 
-    /**
-     * Returns the updated value.
-     *
-     * @return The updated value.
-     */
-    public T update() {
+    public void setExpect(byte[] expect) {
+      this.expect = expect;
+    }
+
+    public byte[] getUpdate() {
       return update;
     }
 
-    @Override
-    public void writeObject(BufferOutput<?> buffer, Serializer serializer) {
-      serializer.writeObject(expect, buffer);
-      serializer.writeObject(update, buffer);
-    }
-
-    @Override
-    public void readObject(BufferInput<?> buffer, Serializer serializer) {
-      expect = serializer.readObject(buffer);
-      update = serializer.readObject(buffer);
+    public void setUpdate(byte[] update) {
+      this.update = update;
     }
 
     @Override
@@ -221,38 +161,32 @@ public class ValueCommands {
   /**
    * Get and set command.
    */
-  public static class GetAndSet<T> extends ValueCommand<T> {
-    private T value;
+  public static class GetAndSet extends ValueCommand {
+    private byte[] value;
 
     public GetAndSet() {
     }
 
-    public GetAndSet(T value) {
+    public GetAndSet(byte[] value) {
       this.value = value;
     }
 
-    public GetAndSet(T value, long ttl) {
+    public GetAndSet(byte[] value, long ttl) {
       super(ttl);
       this.value = value;
     }
 
-    /**
-     * Returns the command value.
-     *
-     * @return The command value.
-     */
-    public T value() {
+    @Override
+    public String getName() {
+      return "getAndSet";
+    }
+
+    public byte[] getValue() {
       return value;
     }
 
-    @Override
-    public void writeObject(BufferOutput<?> buffer, Serializer serializer) {
-      serializer.writeObject(value, buffer);
-    }
-
-    @Override
-    public void readObject(BufferInput<?> buffer, Serializer serializer) {
-      value = serializer.readObject(buffer);
+    public void setValue(byte[] value) {
+      this.value = value;
     }
 
     @Override
@@ -264,29 +198,20 @@ public class ValueCommands {
   /**
    * Register command.
    */
-  public static class Register extends ValueCommand<Void> {
+  public static class Register extends ValueCommand {
+    @Override
+    public String getName() {
+      return "register";
+    }
   }
 
   /**
    * Unregister command.
    */
-  public static class Unregister extends ValueCommand<Void> {
-  }
-
-  /**
-   * Value command type resolver.
-   */
-  public static class TypeResolver implements SerializableTypeResolver {
+  public static class Unregister extends ValueCommand {
     @Override
-    public void resolve(SerializerRegistry registry) {
-      registry.register(ValueCommands.CompareAndSet.class, -110);
-      registry.register(ValueCommands.Get.class, -111);
-      registry.register(ValueCommands.GetAndSet.class, -112);
-      registry.register(ValueCommands.Set.class, -113);
-      registry.register(DistributedValue.ChangeEvent.class, -120);
-      registry.register(Register.class, -121);
-      registry.register(Unregister.class, -122);
+    public String getName() {
+      return "unregister";
     }
   }
-
 }

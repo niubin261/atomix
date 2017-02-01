@@ -16,6 +16,8 @@
 package io.atomix.manager;
 
 
+import io.atomix.AtomixException;
+
 /**
  * Atomix resource manager exception.
  *

@@ -30,7 +30,7 @@
  *   );
  *
  *   AtomixReplica replica = AtomixReplica.builder(address, members)
- *     .withTransport(new NettyTransport())
+ *     .withProtocol(new NettyTransport())
  *     .withStorage(new Storage("logs"))
  *     .withQuorumHint(3)
  *     .withBackupCount(1)

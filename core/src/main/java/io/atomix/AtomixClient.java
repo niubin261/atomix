@@ -15,24 +15,16 @@
  */
 package io.atomix;
 
-import io.atomix.catalyst.serializer.Serializer;
-import io.atomix.catalyst.transport.Address;
-import io.atomix.catalyst.transport.Transport;
-import io.atomix.catalyst.util.Assert;
-import io.atomix.catalyst.util.PropertiesReader;
 import io.atomix.copycat.client.ConnectionStrategy;
+import io.atomix.copycat.protocol.Address;
+import io.atomix.copycat.util.Assert;
 import io.atomix.manager.ResourceClient;
 import io.atomix.manager.ResourceServer;
-import io.atomix.manager.options.ClientOptions;
-import io.atomix.resource.Resource;
-import io.atomix.resource.ResourceType;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Properties;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  * Provides an interface for creating and operating on {@link io.atomix.resource.Resource}s remotely.
@@ -47,7 +39,7 @@ import java.util.stream.Collectors;
  *     new Address("123.456.789.1", 5000)
  *   );
  *   Atomix atomix = AtomixClient.builder(servers)
- *     .withTransport(new NettyTransport())
+ *     .withProtocol(new NettyTransport())
  *     .build();
  *   }
  * </pre>
@@ -82,29 +74,6 @@ import java.util.stream.Collectors;
 public class AtomixClient extends Atomix {
 
   /**
-   * Returns a new Atomix replica builder from the given configuration file.
-   *
-   * @param properties The properties file from which to load the replica builder.
-   * @return The replica builder.
-   */
-  public static Builder builder(String properties) {
-    return builder(PropertiesReader.load(properties).properties());
-  }
-
-  /**
-   * Returns a new Atomix replica builder from the given properties.
-   *
-   * @param properties The properties from which to load the replica builder.
-   * @return The replica builder.
-   */
-  public static Builder builder(Properties properties) {
-    ClientOptions clientProperties = new ClientOptions(properties);
-    return builder()
-      .withTransport(clientProperties.transport())
-      .withSerializer(clientProperties.serializer());
-  }
-
-  /**
    * Returns a new Atomix client builder.
    * <p>
    * The provided set of members will be used to connect to the Raft cluster. The members list does not have to represent
@@ -114,25 +83,6 @@ public class AtomixClient extends Atomix {
    */
   public static Builder builder() {
     return new Builder(ResourceClient.builder());
-  }
-
-  /**
-   * Builds the underlying resource client from the given properties.
-   */
-  private static ResourceClient buildClient(Properties properties) {
-    ClientOptions clientProperties = new ClientOptions(properties);
-    return ResourceClient.builder()
-      .withTransport(clientProperties.transport())
-      .build();
-  }
-
-  /**
-   * Constructs a client from the given properties.
-   *
-   * @param properties The properties from which to construct the client.
-   */
-  public AtomixClient(Properties properties) {
-    this(buildClient(properties));
   }
 
   /**
@@ -179,7 +129,7 @@ public class AtomixClient extends Atomix {
    * <pre>
    *   {@code
    *   Atomix client = AtomixClient.builder(servers)
-   *     .withTransport(new NettyTransport())
+   *     .withProtocol(new NettyTransport())
    *     .build();
    *   }
    * </pre>
@@ -203,7 +153,7 @@ public class AtomixClient extends Atomix {
      * @throws NullPointerException if {@code transport} is {@code null}
      */
     public Builder withTransport(Transport transport) {
-      builder.withTransport(transport);
+      builder.withProtocol(transport);
       return this;
     }
 
@@ -240,64 +190,6 @@ public class AtomixClient extends Atomix {
      */
     public Builder withSessionTimeout(Duration sessionTimeout) {
       builder.withSessionTimeout(sessionTimeout);
-      return this;
-    }
-
-    /**
-     * Sets the available resource types.
-     *
-     * @param types The available resource types.
-     * @return The client builder.
-     */
-    public Builder withResourceTypes(Class<? extends Resource<?>>... types) {
-      if (types != null) {
-        return withResourceTypes(Arrays.asList(types).stream().map(ResourceType::new).collect(Collectors.toList()));
-      }
-      return this;
-    }
-
-    /**
-     * Sets the available resource types.
-     *
-     * @param types The available resource types.
-     * @return The client builder.
-     */
-    public Builder withResourceTypes(ResourceType... types) {
-      if (types != null) {
-        return withResourceTypes(Arrays.asList(types));
-      }
-      return this;
-    }
-
-    /**
-     * Sets the available resource types.
-     *
-     * @param types The available resource types.
-     * @return The client builder.
-     */
-    public Builder withResourceTypes(Collection<ResourceType> types) {
-      builder.withResourceTypes(types);
-      return this;
-    }
-
-    /**
-     * Adds a resource type to the client.
-     *
-     * @param type The resource type.
-     * @return The client builder.
-     */
-    public Builder addResourceType(Class<? extends Resource<?>> type) {
-      return addResourceType(new ResourceType(type));
-    }
-
-    /**
-     * Adds a resource type to the client.
-     *
-     * @param type The resource type.
-     * @return The client builder.
-     */
-    public Builder addResourceType(ResourceType type) {
-      builder.addResourceType(type);
       return this;
     }
 

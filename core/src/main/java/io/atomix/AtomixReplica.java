@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
  *   {@code
  *   List<Address> members = Arrays.asList(new Address("123.456.789.0", 5000), new Address("123.456.789.1", 5000));
  *   Atomix atomix = AtomixReplica.builder(address, members)
- *     .withTransport(new NettyTransport())
+ *     .withProtocol(new NettyTransport())
  *     .withStorage(new Storage(StorageLevel.MEMORY))
  *     .build();
  *   }
@@ -84,7 +84,7 @@ import java.util.stream.Collectors;
  * <pre>
  *   {@code
  *   Atomix atomix = AtomixReplica.builder(address, members)
- *     .withTransport(new NettyTransport())
+ *     .withProtocol(new NettyTransport())
  *     .withStorage(Storage.builder()
  *       .withDirectory(new File("logs"))
  *       .withStorageLevel(StorageLevel.MAPPED)
@@ -558,7 +558,7 @@ public final class AtomixReplica extends Atomix {
    * <pre>
    *   {@code
    *   Atomix replica = AtomixReplica.builder(address, members)
-   *     .withTransport(new NettyTransport())
+   *     .withProtocol(new NettyTransport())
    *     .withStorage(Storage.builder()
    *       .withDirectory("logs")
    *       .withStorageLevel(StorageLevel.MAPPED)

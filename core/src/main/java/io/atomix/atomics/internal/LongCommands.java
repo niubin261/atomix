@@ -15,14 +15,7 @@
  */
 package io.atomix.atomics.internal;
 
-import io.atomix.catalyst.buffer.BufferInput;
-import io.atomix.catalyst.buffer.BufferOutput;
-import io.atomix.catalyst.serializer.CatalystSerializable;
-import io.atomix.catalyst.serializer.SerializableTypeResolver;
-import io.atomix.catalyst.serializer.Serializer;
-import io.atomix.catalyst.serializer.SerializerRegistry;
-import io.atomix.copycat.Command;
-import io.atomix.atomics.DistributedValue;
+import io.atomix.resource.Operation;
 
 /**
  * Long commands.
@@ -37,79 +30,70 @@ public final class LongCommands {
   /**
    * Abstract long command.
    */
-  public static abstract class LongCommand<V> implements Command<V>, CatalystSerializable {
-
+  public static abstract class LongCommand<V> implements Operation {
     protected LongCommand() {
-    }
-
-    @Override
-    public CompactionMode compaction() {
-      return CompactionMode.SNAPSHOT;
-    }
-
-    @Override
-    public void writeObject(BufferOutput<?> buffer, Serializer serializer) {
-    }
-
-    @Override
-    public void readObject(BufferInput<?> buffer, Serializer serializer) {
     }
   }
 
   /**
    * Increment and get command.
    */
-  public static class IncrementAndGet extends LongCommand<Long> {
+  public static class IncrementAndGet extends LongCommand {
+    @Override
+    public String getName() {
+      return "incrementAndGet";
+    }
   }
 
   /**
    * Decrement and get command.
    */
   public static class DecrementAndGet extends LongCommand<Long> {
+    @Override
+    public String getName() {
+      return "decrementAndGet";
+    }
   }
 
   /**
    * Get and increment command.
    */
   public static class GetAndIncrement extends LongCommand<Long> {
+    @Override
+    public String getName() {
+      return "getAndIncrement";
+    }
   }
 
   /**
    * Get and decrement command.
    */
   public static class GetAndDecrement extends LongCommand<Long> {
+    @Override
+    public String getName() {
+      return "getAndDecrement";
+    }
   }
 
   /**
    * Delta command.
    */
   public static abstract class DeltaCommand extends LongCommand<Long> {
-    private long delta;
+    private byte[] delta;
 
     public DeltaCommand() {
     }
 
-    public DeltaCommand(long delta) {
+    public DeltaCommand(byte[] delta) {
       this.delta = delta;
     }
 
-    /**
-     * Returns the delta.
-     *
-     * @return The delta.
-     */
-    public long delta() {
+    public byte[] getDelta() {
       return delta;
     }
 
-    @Override
-    public void writeObject(BufferOutput<?> buffer, Serializer serializer) {
-      buffer.writeLong(delta);
-    }
-
-    @Override
-    public void readObject(BufferInput<?> buffer, Serializer serializer) {
-      delta = buffer.readLong();
+    public void setDelta(byte[] delta) {
+      this.delta = delta;
     }
   }
 
@@ -120,8 +104,13 @@ public final class LongCommands {
     public GetAndAdd() {
     }
 
-    public GetAndAdd(long delta) {
+    public GetAndAdd(byte[] delta) {
       super(delta);
+    }
+
+    @Override
+    public String getName() {
+      return "getAndAdd";
     }
   }
 
@@ -132,31 +121,13 @@ public final class LongCommands {
     public AddAndGet() {
     }
 
-    public AddAndGet(long delta) {
+    public AddAndGet(byte[] delta) {
       super(delta);
     }
-  }
 
-  /**
-   * Value command type resolver.
-   */
-  public static class TypeResolver implements SerializableTypeResolver {
     @Override
-    public void resolve(SerializerRegistry registry) {
-      registry.register(ValueCommands.CompareAndSet.class, -110);
-      registry.register(ValueCommands.Get.class, -111);
-      registry.register(ValueCommands.GetAndSet.class, -112);
-      registry.register(ValueCommands.Set.class, -113);
-      registry.register(IncrementAndGet.class, -114);
-      registry.register(DecrementAndGet.class, -115);
-      registry.register(GetAndIncrement.class, -116);
-      registry.register(GetAndDecrement.class, -117);
-      registry.register(AddAndGet.class, -118);
-      registry.register(GetAndAdd.class, -119);
-      registry.register(DistributedValue.ChangeEvent.class, -120);
-      registry.register(ValueCommands.Register.class, -121);
-      registry.register(ValueCommands.Unregister.class, -122);
+    public String getName() {
+      return "addAndGet";
     }
   }
-
 }

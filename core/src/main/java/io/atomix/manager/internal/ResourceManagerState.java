@@ -18,19 +18,21 @@ package io.atomix.manager.internal;
 import io.atomix.copycat.server.Commit;
 import io.atomix.copycat.server.Snapshottable;
 import io.atomix.copycat.server.StateMachine;
-import io.atomix.copycat.server.StateMachineExecutor;
-import io.atomix.copycat.server.session.ServerSession;
+import io.atomix.copycat.server.StateMachineContext;
+import io.atomix.copycat.server.session.Session;
 import io.atomix.copycat.server.session.SessionListener;
 import io.atomix.copycat.server.storage.snapshot.SnapshotReader;
 import io.atomix.copycat.server.storage.snapshot.SnapshotWriter;
 import io.atomix.manager.ResourceManagerException;
+import io.atomix.protocol.http.HttpOperation;
 import io.atomix.resource.Resource;
 import io.atomix.resource.ResourceStateMachine;
 import io.atomix.resource.ResourceType;
 import io.atomix.resource.instance.InstanceOperation;
+import io.atomix.util.Bson;
+import io.atomix.util.Serializer;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -39,21 +41,15 @@ import java.util.stream.Collectors;
  * @author <a href="http://github.com/kuujo">Jordan Halterman</a>
  */
 public class ResourceManagerState extends StateMachine implements SessionListener, Snapshottable {
-  private StateMachineExecutor executor;
   private final Map<String, Long> keys = new HashMap<>();
   private final Map<Long, ResourceHolder> resources = new HashMap<>();
   private final ResourceManagerCommitPool commits = new ResourceManagerCommitPool();
+  private final Serializer serializer = Bson.newSerializer();
 
   @Override
-  public void configure(StateMachineExecutor executor) {
-    this.executor = executor;
-    executor.register(InstanceOperation.class, (Function<Commit<InstanceOperation>, Object>) this::operateResource);
-    executor.register(GetResource.class, this::getResource);
-    executor.register(GetResourceIfExists.class, this::getResourceIfExists);
-    executor.register(CloseResource.class, this::closeResource);
-    executor.register(DeleteResource.class, this::deleteResource);
-    executor.register(ResourceExists.class, this::resourceExists);
-    executor.register(GetResourceKeys.class, this::getResourceKeys);
+  public byte[] apply(Commit commit) {
+    final HttpOperation command = serializer.readValue(commit.bytes(), HttpOperation.class);
+    final String path = command.getPath();
   }
 
   @Override
@@ -240,25 +236,25 @@ public class ResourceManagerState extends StateMachine implements SessionListene
   }
 
   @Override
-  public void register(ServerSession session) {
+  public void register(Session session) {
   }
 
   @Override
-  public void expire(ServerSession session) {
+  public void expire(Session session) {
     for (ResourceHolder resource : resources.values()) {
       resource.executor.context.sessions.expire(session.id());
     }
   }
 
   @Override
-  public void unregister(ServerSession session) {
+  public void unregister(Session session) {
     for (ResourceHolder resource : resources.values()) {
       resource.executor.context.sessions.unregister(session.id());
     }
   }
 
   @Override
-  public void close(ServerSession session) {
+  public void close(Session session) {
     for (ResourceHolder resource : resources.values()) {
       resource.executor.context.sessions.close(session.id());
     }
