@@ -151,6 +151,7 @@ public class PhiAccrualFailureDetectionService<T extends Identifier>
   public static class Builder<T extends Identifier> implements FailureDetectionService.Builder<T> {
     private static final Duration DEFAULT_HEARTBEAT_INTERVAL = Duration.ofMillis(100);
     private static final int DEFAULT_PHI_FAILURE_THRESHOLD = 10;
+    private static final int DEFAULT_PHI_FAILURE_THRESHOLD_TEST = 5;
     private static final int DEFAULT_MIN_SAMPLES = 25;
     private static final double DEFAULT_PHI_FACTOR = 1.0 / Math.log(10.0);
     private static final double DEFAULT_BOOTSTRAP_PHI_VALUE = 100.0;
@@ -160,7 +161,7 @@ public class PhiAccrualFailureDetectionService<T extends Identifier>
     private Supplier<Collection<T>> peerProvider;
     private ScheduledExecutorService heartbeatExecutor;
     private Duration heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
-    private int phiFailureThreshold = DEFAULT_PHI_FAILURE_THRESHOLD;
+    private int phiFailureThreshold = DEFAULT_PHI_FAILURE_THRESHOLD_TEST;
     private int minSamples = DEFAULT_MIN_SAMPLES;
     private double phiFactor = DEFAULT_PHI_FACTOR;
     private double bootstrapPhiValue = DEFAULT_BOOTSTRAP_PHI_VALUE;
